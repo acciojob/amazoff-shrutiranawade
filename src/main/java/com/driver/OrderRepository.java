@@ -52,8 +52,8 @@ public OrderRepository(){
     }
     //odercountbyParner
     public int getOrderCountByPartnerId(String partnerId){
-    int countofOrders =deliveryPartners.get(partnerId).getNumberOfOrders();
-    return countofOrders;
+    int CountOfOrders = deliveryPartners.get(partnerId).getNumberOfOrders();
+    return CountOfOrders;
     }
     public List<String>getOrdersByPartnerId(String partnerId){
     return partnerOrders.get(partnerId);
@@ -80,18 +80,18 @@ public OrderRepository(){
     }
     //
     public String getLastDeliveryTimeByPartnerId(String partnerId){
-    int lastOrderTime =0;
+    int LastOrderTime = 0;
     List<String>orderList = partnerOrders.get(partnerId);
-    for (String orderid : orderList){
-    lastOrderTime = Math.max(lastOrderTime,orders.get(orderid).getDeliveryTime());
+    for (String OrderId : orderList){
+        LastOrderTime = Math.max(LastOrderTime,orders.get(OrderId).getDeliveryTime());
     }
-    return Order.getDeliveryTimeAsString(lastOrderTime);
+    return Order.getDeliveryTimeAsString(LastOrderTime);
     }
     //
     public void deletePartnerById(String partnerId){
         List<String>orderList = partnerOrders.get(partnerId);
-        for (String orderid : orderList){
-            orderPartnerPair.remove(orderid);
+        for (String OrderId : orderList){
+            orderPartnerPair.remove(OrderId);
         }
         deliveryPartners.remove(partnerId);
 
