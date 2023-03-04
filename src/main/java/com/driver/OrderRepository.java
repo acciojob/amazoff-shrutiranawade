@@ -32,15 +32,23 @@ public OrderRepository(){
     }
 
     //add order-partner pair
-    public void addOrderPartnerPair(String orderId ,String deliverypartnerid){
-    List<String>orderlist = partnerOrders.getOrDefault(deliverypartnerid,new ArrayList<>());
-    orderlist.add(orderId);
+    public void addOrderPartnerPair(String orderId ,String partnerId) {
+        if (orders.containsKey(orderId) && partnerOrders.containsKey(partnerId)) {
+            orderPartnerPair.put(orderId, partnerId);
+            List<String> orderlist = new ArrayList<>();
+            if (partnerOrders.containsKey(partnerId)) {     // list1 partner1 -4 orders
+                //orders with same delivery person put in his order list;
 
-    partnerOrders.put(deliverypartnerid,orderlist);
-    orderPartnerPair.put(orderId,deliverypartnerid);
-    //update no of orders in partner object
-        DeliveryPartner deliveryPartner = deliveryPartners.get(deliverypartnerid);
-        deliveryPartner.setNumberOfOrders(orderlist.size());
+                orderlist = partnerOrders.get(partnerId);  //p1
+            }
+            orderlist.add(orderId);                   //o1
+            partnerOrders.put(partnerId, orderlist); // partner - his orderslist
+
+            //update no of orders in partner object
+
+            DeliveryPartner deliveryPartner = deliveryPartners.get(partnerId);
+            deliveryPartner.setNumberOfOrders(orderlist.size());  //set all orders of delivery partner
+        }
     }
     //get orders by id
     public Order getOrderById(String orderId){
@@ -52,7 +60,7 @@ public OrderRepository(){
     }
     //odercountbyParner
     public int getOrderCountByPartnerId(String partnerId){
-    int CountOfOrders = deliveryPartners.get(partnerId).getNumberOfOrders();
+    int CountOfOrders = partnerOrders.get(partnerId).size();
     return CountOfOrders;
     }
     public List<String>getOrdersByPartnerId(String partnerId){
@@ -64,36 +72,41 @@ public OrderRepository(){
     }
     //unassigned order counr
     public int getCountOfUnassignedOrders(){
-    return orders.size()-partnerOrders.size();
+    return orders.size()-partnerOrders.size();    // order -orderpartnerpair
     }
     //left order after time
-    public int getOrdersLeftAfterGivenTime(String time,String partnerId){
+    public int getOrdersLeftAfterGivenTime(int time,String partnerId){
     int countOfLeftOrders = 0;
-    int timeInt = Order.getDeliveryTimeAsInt(time);
+
     List<String>orderlist = partnerOrders.get(partnerId);
-    for (String orderId : orderlist){
-        if(orders.get(orderId).getDeliveryTime()>timeInt){
+    for(String orderId : orderlist){
+        int timedelivered = orders.get(orderId).getDeliveryTime();
+        if(time < timedelivered){
             countOfLeftOrders++;
         }
     }
     return countOfLeftOrders;
     }
     //
-    public String getLastDeliveryTimeByPartnerId(String partnerId){
+    public int getLastDeliveryTimeByPartnerId(String partnerId){
     int LastOrderTime = 0;
     List<String>orderList = partnerOrders.get(partnerId);
     for (String OrderId : orderList){
         LastOrderTime = Math.max(LastOrderTime,orders.get(OrderId).getDeliveryTime());
     }
-    return Order.getDeliveryTimeAsString(LastOrderTime);
+    return LastOrderTime;
     }
     //
     public void deletePartnerById(String partnerId){
-        List<String>orderList = partnerOrders.get(partnerId);
+        List<String>orderList = partnerOrders.get(partnerId);   //removing all orders by given partner from partnerorder map
+
+        for (String OrderId : orderList)
+            orderPartnerPair.remove(OrderId);   //orders from pair list
+
         for (String OrderId : orderList){
-            orderPartnerPair.remove(OrderId);
+           partnerOrders.remove(OrderId);   //orders from pair list of that partnerid
         }
-        deliveryPartners.remove(partnerId);
+        deliveryPartners.remove(partnerId); //parnerlist
 
     }
     public void deleteOrderById(String orderId){
@@ -101,6 +114,7 @@ public OrderRepository(){
     if (orderPartnerPair.containsKey(orderId)){
         String partnerId = orderPartnerPair.get(orderId);
         orderPartnerPair.remove(orderId);
+
         partnerOrders.get(partnerId).remove(orderId);
         deliveryPartners.get(partnerId).setNumberOfOrders(partnerOrders.get(partnerId).size());
     }
